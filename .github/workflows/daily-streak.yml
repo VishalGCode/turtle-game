@@ -10,7 +10,12 @@ on:
     - cron: "0 13 * * *"  # Commit 6 → 1:00 PM  UTC (6:30 PM IST)
     - cron: "0 15 * * *"  # Commit 7 → 3:00 PM  UTC (8:30 PM IST)
     - cron: "0 17 * * *"  # Commit 8 → 5:00 PM  UTC (10:30 PM IST)
-  workflow_dispatch:        # Manual trigger from GitHub Actions UI
+  workflow_dispatch:
+
+# ✅ FIX 1: Only 1 job runs at a time — queues instead of racing
+concurrency:
+  group: streak-commit-group
+  cancel-in-progress: false  # Don't cancel, wait in queue
 
 jobs:
   streak-commit:
@@ -23,14 +28,10 @@ jobs:
       - name: 🎲 Randomly Skip 2 Days Per Week (~5 active days)
         id: day_check
         run: |
-          # Day of week: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
           DAY_OF_WEEK=$(date +"%u")
-
-          # Use week number as seed → same 2 days are skipped all week
           WEEK_NUM=$(date +"%Y%U")
           SEED=$(echo "$WEEK_NUM" | cksum | awk '{print $1}')
 
-          # Derive 2 unique skip days (1–7)
           SKIP1=$(( (SEED % 7) + 1 ))
           SKIP2=$(( ((SEED / 7) % 7) + 1 ))
           if [ "$SKIP1" -eq "$SKIP2" ]; then
@@ -54,10 +55,7 @@ jobs:
           DATE=$(TZ="Asia/Kolkata" date +"%Y-%m-%d")
           TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
           RUN="${{ github.run_number }}"
-
           echo "[$DATE $TIME IST] ✅ Commit #$RUN — Streak active" >> streak-logs/streak.log
-
-          # Keep only last 100 entries
           tail -100 streak-logs/streak.log > streak-logs/tmp.log
           mv streak-logs/tmp.log streak-logs/streak.log
 
@@ -99,7 +97,7 @@ jobs:
           \`\`\`bash
           python "TURTLE GAME.py"
           \`\`\`
-          > Python 3 required. No extra packages needed — \`turtle\` is built-in.
+          > Python 3 required. \`turtle\` is built-in, no install needed.
           EOF
 
       - name: 📤 Commit & Push
@@ -112,8 +110,10 @@ jobs:
           TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
 
           git add streak-logs/streak.log README.md
-          git pull --rebase origin main
+
+          # ✅ FIX 2: Commit FIRST, then pull --rebase, then push
           git diff --staged --quiet || git commit -m "🔥 Streak: $DATE $TIME IST | Commit #${{ github.run_number }}"
+          git pull --rebase origin main
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
