@@ -17,6 +17,10 @@ concurrency:
   group: streak-commit-group
   cancel-in-progress: false  # Don't cancel, wait in queue
 
+# ✅ Added this block
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   streak-commit:
     runs-on: ubuntu-latest
