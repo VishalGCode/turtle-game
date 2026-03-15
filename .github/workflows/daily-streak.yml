@@ -112,6 +112,7 @@ jobs:
           TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
 
           git add streak-logs/streak.log README.md
+          git pull --rebase origin main
           git diff --staged --quiet || git commit -m "🔥 Streak: $DATE $TIME IST | Commit #${{ github.run_number }}"
           git push
         env:
