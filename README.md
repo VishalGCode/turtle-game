@@ -1,0 +1,31 @@
+# 🐍 Snake Game — Python Turtle
+
+A classic Snake Game built with Python's Turtle module.
+
+## 🎮 Controls
+| Key | Action |
+|-----|--------|
+| W   | Move Up |
+| S   | Move Down |
+| A   | Move Left |
+| D   | Move Right |
+
+## 📁 Structure
+| File | Description |
+|------|-------------|
+| `TURTLE GAME.py` | Snake Game source code |
+| `streak-logs/streak.log` | Auto-updated activity log |
+
+## 🔥 Streak Status
+![Last Commit](https://img.shields.io/github/last-commit/VishalGCode/turtle-game)
+![Streak](https://img.shields.io/badge/streak-active-brightgreen)
+![Commits/Day](https://img.shields.io/badge/commits_per_day-8-blue)
+![Days/Week](https://img.shields.io/badge/days_per_week-5-orange)
+
+**Last updated:** 2026-03-15 at 19:05:15 IST · Run #1
+
+## ▶️ Run Locally
+```bash
+python "TURTLE GAME.py"
+```
+> Python 3 required. No extra packages needed — `turtle` is built-in.
