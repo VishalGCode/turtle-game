@@ -18,7 +18,7 @@ jobs:
 
     steps:
       - name: ✅ Checkout Repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 🎲 Randomly Skip 2 Days Per Week (~5 active days)
         id: day_check
