@@ -1,0 +1,118 @@
+name: 🔥 GitHub Streak - 8 Commits on 5 Random Days
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # Commit 1 → 1:00 AM  UTC (6:30 AM IST)
+    - cron: "0 4 * * *"   # Commit 2 → 4:00 AM  UTC (9:30 AM IST)
+    - cron: "0 6 * * *"   # Commit 3 → 6:00 AM  UTC (11:30 AM IST)
+    - cron: "0 8 * * *"   # Commit 4 → 8:00 AM  UTC (1:30 PM IST)
+    - cron: "0 10 * * *"  # Commit 5 → 10:00 AM UTC (3:30 PM IST)
+    - cron: "0 13 * * *"  # Commit 6 → 1:00 PM  UTC (6:30 PM IST)
+    - cron: "0 15 * * *"  # Commit 7 → 3:00 PM  UTC (8:30 PM IST)
+    - cron: "0 17 * * *"  # Commit 8 → 5:00 PM  UTC (10:30 PM IST)
+  workflow_dispatch:        # Manual trigger from GitHub Actions UI
+
+jobs:
+  streak-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: ✅ Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: 🎲 Randomly Skip 2 Days Per Week (~5 active days)
+        id: day_check
+        run: |
+          # Day of week: 1=Mon, 2=Tue, 3=Wed, 4=Thu, 5=Fri, 6=Sat, 7=Sun
+          DAY_OF_WEEK=$(date +"%u")
+
+          # Use week number as seed → same 2 days are skipped all week
+          WEEK_NUM=$(date +"%Y%U")
+          SEED=$(echo "$WEEK_NUM" | cksum | awk '{print $1}')
+
+          # Derive 2 unique skip days (1–7)
+          SKIP1=$(( (SEED % 7) + 1 ))
+          SKIP2=$(( ((SEED / 7) % 7) + 1 ))
+          if [ "$SKIP1" -eq "$SKIP2" ]; then
+            SKIP2=$(( (SKIP2 % 7) + 1 ))
+          fi
+
+          echo "Today → Day $DAY_OF_WEEK | Skipping days: $SKIP1 & $SKIP2 this week"
+
+          if [ "$DAY_OF_WEEK" -eq "$SKIP1" ] || [ "$DAY_OF_WEEK" -eq "$SKIP2" ]; then
+            echo "⏭️ Rest day — no commit today."
+            echo "should_commit=false" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Active day — committing!"
+            echo "should_commit=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 📝 Update Streak Log
+        if: steps.day_check.outputs.should_commit == 'true'
+        run: |
+          mkdir -p streak-logs
+          DATE=$(TZ="Asia/Kolkata" date +"%Y-%m-%d")
+          TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
+          RUN="${{ github.run_number }}"
+
+          echo "[$DATE $TIME IST] ✅ Commit #$RUN — Streak active" >> streak-logs/streak.log
+
+          # Keep only last 100 entries
+          tail -100 streak-logs/streak.log > streak-logs/tmp.log
+          mv streak-logs/tmp.log streak-logs/streak.log
+
+      - name: 🔄 Refresh README
+        if: steps.day_check.outputs.should_commit == 'true'
+        run: |
+          DATE=$(TZ="Asia/Kolkata" date +"%Y-%m-%d")
+          TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
+          RUN="${{ github.run_number }}"
+
+          cat > README.md << EOF
+          # 🐍 Snake Game — Python Turtle
+
+          A classic Snake Game built with Python's Turtle module.
+
+          ## 🎮 Controls
+          | Key | Action |
+          |-----|--------|
+          | W   | Move Up |
+          | S   | Move Down |
+          | A   | Move Left |
+          | D   | Move Right |
+
+          ## 📁 Structure
+          | File | Description |
+          |------|-------------|
+          | \`TURTLE GAME.py\` | Snake Game source code |
+          | \`streak-logs/streak.log\` | Auto-updated activity log |
+
+          ## 🔥 Streak Status
+          ![Last Commit](https://img.shields.io/github/last-commit/${{ github.repository }})
+          ![Streak](https://img.shields.io/badge/streak-active-brightgreen)
+          ![Commits/Day](https://img.shields.io/badge/commits_per_day-8-blue)
+          ![Days/Week](https://img.shields.io/badge/days_per_week-5-orange)
+
+          **Last updated:** $DATE at $TIME IST · Run #$RUN
+
+          ## ▶️ Run Locally
+          \`\`\`bash
+          python "TURTLE GAME.py"
+          \`\`\`
+          > Python 3 required. No extra packages needed — \`turtle\` is built-in.
+          EOF
+
+      - name: 📤 Commit & Push
+        if: steps.day_check.outputs.should_commit == 'true'
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+          DATE=$(TZ="Asia/Kolkata" date +"%Y-%m-%d")
+          TIME=$(TZ="Asia/Kolkata" date +"%H:%M:%S")
+
+          git add streak-logs/streak.log README.md
+          git diff --staged --quiet || git commit -m "🔥 Streak: $DATE $TIME IST | Commit #${{ github.run_number }}"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
