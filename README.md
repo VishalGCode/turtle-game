@@ -22,10 +22,10 @@ A classic Snake Game built with Python's Turtle module.
 ![Commits/Day](https://img.shields.io/badge/commits_per_day-8-blue)
 ![Days/Week](https://img.shields.io/badge/days_per_week-5-orange)
 
-**Last updated:** 2026-03-15 at 19:05:15 IST · Run #1
+**Last updated:** 2026-03-15 at 19:14:51 IST · Run #2
 
 ## ▶️ Run Locally
 ```bash
 python "TURTLE GAME.py"
 ```
-> Python 3 required. No extra packages needed — `turtle` is built-in.
+> Python 3 required. `turtle` is built-in, no install needed.
